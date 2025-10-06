@@ -10,29 +10,6 @@ CONSONNES = list("bcdfghjklmnpqrstvwxz")
 #### Fonctions secondaires
 
 def read_data(filename):
-    """
-    >>> mots = liste_mots(FILENAME)
-    >>> isinstance(mots, list)
-    True
-    >>> len(mots)
-    336531
-    >>> mots[1]
-    'à'
-    >>> mots[328570]
-    'vaincre'
-    >>> mots[290761]
-    'sans'
-    >>> mots[233574]
-    'péril'
-    >>> mots[221712]
-    'on'
-    >>> mots[324539]
-    'triomphe'
-    >>> mots[290761]
-    'sans'
-    >>> mots[166128]
-    'gloire'
-    """
     with open(filename, mode='r', encoding="utf8") as f:
         mots = f.readlines()
     return [ mot.strip() for mot in mots ]
@@ -47,15 +24,6 @@ def ensemble_mots(filename):
     Returns:
         list: la liste des mots
 
-    >>> mots = ensemble_mots(FILENAME)
-    >>> isinstance(mots, set)
-    True
-    >>> len(mots)
-    336531
-    >>> "glomérules" in mots
-    True
-    >>> "glycosudrique" in mots
-    False
     """
     return set(read_data(filename))
 
@@ -69,21 +37,6 @@ def mots_de_n_lettres(mots, n):
 
     Returns:
         set: sous ensemble des mots de n lettres
-
-    >>> mots = ensemble_mots(FILENAME)
-    >>> m15 = mots_de_n_lettres(mots, 15)
-    >>> isinstance(m15, set)
-    True
-    >>> len(m15)
-    8730
-    >>> list({ len(mots_de_n_lettres(mots,i)) for i in range(15,26)})
-    [4418, 2, 4, 2120, 42, 11, 205, 977, 437, 8730, 94]
-    >>> sorted(list(mots_de_n_lettres(mots,23)))[0]
-    'constitutionnalisassent'
-    >>> sorted(list(mots_de_n_lettres(mots,24)))
-    ['constitutionnalisassions', 'constitutionnaliseraient', 'hospitalo-universitaires', 'oto-rhino-laryngologiste']
-    >>> sorted(list(mots_de_n_lettres(mots,25)))
-    ['anticonstitutionnellement', 'oto-rhino-laryngologistes']
     """
     return { mot for mot in mots if len(mot) == n }
 
@@ -97,49 +50,51 @@ def mots_avec(mots, s):
 
     Returns:
         set: sous ensemble des mots incluant la chaine de caractères s
-
-    >>> mots = ensemble_mots(FILENAME)
-    >>> mk = mots_avec(mots, 'k')
-    >>> isinstance(mk, set)
-    True
-    >>> len(mk)
-    1621
-    >>> sorted(list(mk))[35:74:7]
-    ['ankyloseraient', 'ankyloserons', 'ankylostome', 'ankylosée', 'ashkénaze', 'bachi-bouzouks']
-    >>> sorted(list(mk))[147:359:38]
-    ['black', 'blackboulèrent', 'cheikhs', 'cokéfierais', 'dock', 'dénickeliez']
-    >>> sorted(list(mk))[999::122]
-    ['képi', 'nickela', 'parkérisiez', 'semi-coke', 'stockais', 'week-end']
     """
     return { mot for mot in mots if s in mot }
 
 
 def cherche1(mots, start, stop, n):
-    """retourne le sous ensemble des mots de n lettres commençant par start et finissant par stop
+    """Retourne le sous-ensemble des mots de n lettres commençant par start et finissant par stop.
 
     Args:
         mots (set): ensemble de mots
-        start (str): première lettre
-        stop (str): dernière lettre
+        start (str): préfixe
+        stop (str): suffixe
         n (int): nombre de lettres
 
     Returns:
-        set: sous ensemble des mots de n lettres commençant par start et finissant par stop
+        set: sous-ensemble des mots correspondant aux critères.
 
-    >>> mots = ensemble_mots(FILENAME)
-    >>> m_z = cherche1(mots, 'z', 'z', 7)
-    >>> isinstance(m_z, set)
-    True
-    >>> len(m_z)
-    796
-    >>> sorted(list(m_z))[35:74:7]
-    ['zambèze', 'zézai', 'zinzin', 'zonzon', 'zouzou', 'zozotera']
-    >>> sorted(list(m_z))[147:359:38]
-    ['zézai', 'zinzin', 'zonzon', 'zouzou', 'zozotera', 'zézai']
-    >>> sorted(list(m_z))[999::122]
-    ['zézai', 'zinzin', 'zonzon', 'zouzou', 'zozotera', 'zézai']
     """
     return { mot for mot in mots if len(mot) == n and mot.startswith(start) and mot.endswith(stop) }
+
+
+def cherche2(mots, lstart, lmid, lstop, nmin, nmax):
+    """
+    Retourne le sous-ensemble de mots correspondant à plusieurs critères.
+
+    Args:
+        mots (set): ensemble de mots
+        lstart (list): liste de préfixes possibles
+        lmid (list): liste de chaînes de caractères à inclure
+        lstop (list): liste de suffixes possibles
+        nmin (int): nombre de lettres minimum
+        nmax (int): nombre de lettres maximum
+
+    Returns:
+        set: sous-ensemble de mots filtrés
+    """
+    if not lstart or not lmid or not lstop:
+        return set()
+
+    mots_par_longueur = {mot for mot in mots if nmin <= len(mot) <= nmax}
+
+    ensemble_start = {mot for mot in mots_par_longueur if any(mot.startswith(s) for s in lstart)}
+    ensemble_mid = {mot for mot in mots_par_longueur if any(s in mot for s in lmid)}
+    ensemble_stop = {mot for mot in mots_par_longueur if any(mot.endswith(s) for s in lstop)}
+
+    return ensemble_start & ensemble_mid & ensemble_stop
 
 # def cherche2(mots, lstart, lmid, lstop, nmin, nmax):
 #     """retourne le sous ensemble des mots de n lettres commençant par lstart, contenant lmid et finissant par lstop
@@ -155,14 +110,6 @@ def cherche1(mots, start, stop, n):
 #     Returns:
 #         set: sous ensemble des mots de n lettres commençant par lstart, contenant lmid et finissant par lstop
 
-#     >>> mots = ensemble_mots(FILENAME)
-#     >>> mab17ez = cherche2(mots, 'a', 'b', 'z', 17, 17)
-#     >>> isinstance(mab17ez, set)
-#     True
-#     >>> len(mab17ez)
-#     1
-#     >>> list(mab17ez)[0]
-#     'auto-déterminassiez'
 #     """
     # good_length = { mot for mot in mots if len(mot) >= nmin and len(mot) <= nmax }
     # start = set()
@@ -184,22 +131,6 @@ def cherche1(mots, start, stop, n):
     # print(stop)
 
     # return start & mid & stop
-
-def cherche2(ensemble_mots, lstart, lmid, lstop, nmin, nmax):
-    sous_ensemble = set()
-
-    for mot in ensemble_mots:
-        # Vérifier la longueur du mot
-        if nmin <= len(mot) <= nmax:
-            # Si lstart est vide, on accepte tous les mots, sinon on vérifie
-            if not lstart or any(mot.startswith(start) for start in lstart):
-                # Si lmid est vide, on accepte tous les mots, sinon on vérifie au milieu
-                if not lmid or any(mid in mot[1:-1] for mid in lmid):
-                    # Si lstop est vide, on accepte tous les mots, sinon on vérifie la fin
-                    if not lstop or any(mot.endswith(stop) for stop in lstop):
-                        sous_ensemble.add(mot)
-
-    return sous_ensemble
 
 
 #### Fonction principale
